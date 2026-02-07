@@ -274,6 +274,31 @@ class ApiClient {
     const response = await this.client.post('/api/analytics/recommend/stock', data);
     return response.data;
   }
+
+  // New analytics endpoints
+  async getStockClassification() {
+    const response = await this.client.get('/api/analytics/stock-classification');
+    return response.data;
+  }
+
+  async getLowStockAlerts(threshold: number = 20) {
+    const response = await this.client.get('/api/analytics/low-stock-alerts', { 
+      params: { threshold } 
+    });
+    return response.data;
+  }
+
+  async getRegionalSales() {
+    const response = await this.client.get('/api/analytics/regional-sales');
+    return response.data;
+  }
+
+  async getDemandForecastSimple(days: number = 7) {
+    const response = await this.client.get('/api/analytics/demand-forecast', { 
+      params: { days } 
+    });
+    return response.data;
+  }
 }
 
 export const api = new ApiClient();

@@ -2,10 +2,10 @@ import { prisma, redis } from '../config/infra';
 import { logger } from '../utils/logger';
 
 export const getDealerProfile = async (dealerId: string) => {
-  // 1. Try Cache
-  const cacheKey = `dealer:${dealerId}:profile`;
-  const cached = await redis.get(cacheKey);
-  if (cached) return JSON.parse(cached);
+  // 1. Try Cache (skip caching for demo mode)
+  // const cacheKey = `dealer:${dealerId}:profile`;
+  // const cached = await redis.get(cacheKey);
+  // if (cached) return JSON.parse(cached);
 
   // 2. Database Fetch - Try by ID first, then by userId for demo mode
   let dealer = await prisma.dealer.findUnique({
@@ -45,8 +45,8 @@ export const getDealerProfile = async (dealerId: string) => {
 
   if (!dealer) return null;
 
-  // 3. Cache Result
-  await redis.setex(cacheKey, 600, JSON.stringify(dealer)); // 10 min
+  // 3. Cache Result (skip caching for demo mode)
+  // await redis.setex(cacheKey, 600, JSON.stringify(dealer)); // 10 min
   
   return dealer;
 };

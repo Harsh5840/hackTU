@@ -58,15 +58,17 @@ interface Order {
   id: string;
   orderNumber: string;
   dealerId: string;
-  status: string;
+  status?: string;
+  orderStatus?: string;
   totalAmount: number | string;
+  subtotal?: number | string;
   taxAmount: number | string;
-  discountAmount: number | string;
-  finalAmount: number | string;
-  paymentMethod: string;
+  discountAmount?: number | string;
+  paymentMethod?: string;
   paymentStatus: string;
   items?: Array<{
     productId: string;
+    productName?: string;
     quantity: number;
   }>;
   createdAt: string;
@@ -151,8 +153,8 @@ export default function AdminDashboard() {
         return orderDate.toDateString() === date.toDateString();
       });
       const revenue = dayOrders.reduce((sum, order) => {
-        if (!order.finalAmount) return sum;
-        const amount = typeof order.finalAmount === 'string' ? parseFloat(order.finalAmount) : order.finalAmount;
+        if (!order.totalAmount) return sum;
+        const amount = typeof order.totalAmount === 'string' ? parseFloat(order.totalAmount) : order.totalAmount;
         return sum + (isNaN(amount) ? 0 : amount);
       }, 0);
       return {
@@ -170,16 +172,18 @@ export default function AdminDashboard() {
       if (order.items && Array.isArray(order.items)) {
         order.items.forEach((item) => {
           if (!item.productId || !item.quantity) return;
-          const product = products.find((p) => p.id === item.productId);
-          if (product) {
-            if (!productCounts[product.id]) {
-              productCounts[product.id] = {
-                name: product.name ? product.name.substring(0, 15) : 'Unknown',
-                sales: 0,
-              };
-            }
-            productCounts[product.id].sales += item.quantity;
+          // Try to find product by SKU (productId field contains SKU like P-100)
+          const product = products.find((p) => p.sku === item.productId || p.id === item.productId);
+          const productName = product?.name || item.productName || item.productId;
+          const productKey = item.productId;
+          
+          if (!productCounts[productKey]) {
+            productCounts[productKey] = {
+              name: productName.length > 20 ? productName.substring(0, 20) + '...' : productName,
+              sales: 0,
+            };
           }
+          productCounts[productKey].sales += item.quantity;
         });
       }
     });
@@ -199,11 +203,9 @@ export default function AdminDashboard() {
     };
 
     orders.forEach((order) => {
-      if (order.status) {
-        const status = order.status.toUpperCase();
-        if (status in counts) {
-          counts[status]++;
-        }
+      const status = (order.orderStatus || order.status || '').toUpperCase();
+      if (status in counts) {
+        counts[status]++;
       }
     });
 

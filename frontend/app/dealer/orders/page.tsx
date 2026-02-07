@@ -14,22 +14,22 @@ import Link from 'next/link';
 interface OrderItem {
   id: string;
   productId: string;
+  productName: string;
   quantity: number;
-  unitPrice: number;
-  totalPrice: number;
-  product: {
-    name: string;
-    sku: string;
-  };
+  unitPrice: number | string;
+  lineTotal: number | string;
+  taxAmount?: number | string;
+  discountAmount?: number | string;
 }
 
 interface Order {
   id: string;
   orderNumber: string;
-  status: string;
-  totalAmount: number;
-  taxAmount: number;
-  finalAmount: number;
+  orderStatus: string;
+  status?: string;
+  totalAmount: number | string;
+  subtotal?: number | string;
+  taxAmount: number | string;
   paymentStatus: string;
   deliveryAddress: {
     line1: string;
@@ -143,15 +143,15 @@ export default function OrdersPage() {
                     {new Date(order.createdAt).toLocaleDateString()}
                   </td>
                   <td className="py-4 px-6 text-right font-semibold text-gray-900">
-                    ₹{formatPrice(order.finalAmount)}
+                    ₹{typeof order.totalAmount === 'number' ? order.totalAmount.toFixed(0) : parseFloat(order.totalAmount as any || '0').toFixed(0)}
                   </td>
                   <td className="py-4 px-6 text-center">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        STATUS_COLORS[order.status] || ''
+                        STATUS_COLORS[order.orderStatus || order.status || 'PENDING'] || 'bg-gray-100 text-gray-800'
                       }`}
                     >
-                      {order.status}
+                      {order.orderStatus || order.status || 'PENDING'}
                     </span>
                   </td>
                   <td className="py-4 px-6 text-center">
@@ -209,10 +209,10 @@ export default function OrdersPage() {
                   <p className="text-gray-600">Status</p>
                   <p
                     className={`font-semibold inline-block px-3 py-1 rounded-full text-xs ${
-                      STATUS_COLORS[selectedOrder.status] || ''
+                      STATUS_COLORS[selectedOrder.orderStatus || selectedOrder.status || 'PENDING'] || 'bg-gray-100 text-gray-800'
                     }`}
                   >
-                    {selectedOrder.status}
+                    {selectedOrder.orderStatus || selectedOrder.status || 'PENDING'}
                   </p>
                 </div>
               </div>
@@ -247,13 +247,13 @@ export default function OrdersPage() {
                   <tbody>
                     {selectedOrder.items.map((item) => (
                       <tr key={item.id} className="border-b">
-                        <td className="py-2 text-gray-900">{item.product.name}</td>
+                        <td className="py-2 text-gray-900">{item.productName || 'Unknown Product'}</td>
                         <td className="text-right text-gray-600">{item.quantity}</td>
                         <td className="text-right text-gray-600">
-                          ₹{item.unitPrice.toFixed(0)}
+                          ₹{typeof item.unitPrice === 'number' ? item.unitPrice.toFixed(0) : parseFloat(item.unitPrice as any || '0').toFixed(0)}
                         </td>
                         <td className="text-right font-semibold text-gray-900">
-                          ₹{item.totalPrice.toFixed(0)}
+                          ₹{typeof item.lineTotal === 'number' ? item.lineTotal.toFixed(0) : parseFloat(item.lineTotal as any || '0').toFixed(0)}
                         </td>
                       </tr>
                     ))}
@@ -265,15 +265,15 @@ export default function OrdersPage() {
               <div className="space-y-2 border-t pt-4 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
-                  <span>₹{selectedOrder.totalAmount.toFixed(0)}</span>
+                  <span>₹{typeof selectedOrder.subtotal === 'number' ? selectedOrder.subtotal.toFixed(0) : parseFloat(selectedOrder.subtotal as any || selectedOrder.totalAmount || '0').toFixed(0)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Tax</span>
-                  <span>₹{selectedOrder.taxAmount.toFixed(0)}</span>
+                  <span>₹{typeof selectedOrder.taxAmount === 'number' ? selectedOrder.taxAmount.toFixed(0) : parseFloat(selectedOrder.taxAmount as any || '0').toFixed(0)}</span>
                 </div>
                 <div className="flex justify-between font-semibold text-gray-900">
                   <span>Total</span>
-                  <span>₹{selectedOrder.finalAmount.toFixed(0)}</span>
+                  <span>₹{typeof selectedOrder.totalAmount === 'number' ? selectedOrder.totalAmount.toFixed(0) : parseFloat(selectedOrder.totalAmount as any || '0').toFixed(0)}</span>
                 </div>
               </div>
 
