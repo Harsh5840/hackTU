@@ -6,6 +6,8 @@ COPY package*.json ./
 COPY tsconfig.json ./
 COPY prisma ./prisma/
 
+RUN apk add --no-cache openssl
+
 RUN npm install
 RUN npm run prisma:generate
 

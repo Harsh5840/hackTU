@@ -22,3 +22,19 @@ export const getOrder = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
+
+export const getAllOrders = async (req: Request, res: Response) => {
+  try {
+    const { dealerId, status, limit } = req.query;
+    const filters = {
+      dealerId: dealerId as string | undefined,
+      status: status as string | undefined,
+      limit: limit ? parseInt(limit as string) : undefined
+    };
+    const result = await orderService.getAllOrders(filters);
+    res.json({ success: true, data: result });
+  } catch (err: any) {
+    logger.error(err.message);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+};

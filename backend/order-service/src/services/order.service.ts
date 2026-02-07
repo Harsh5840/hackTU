@@ -47,3 +47,17 @@ export const getOrderById = async (id: string) => {
     include: { items: true, payments: true }
   });
 };
+
+export const getAllOrders = async (filters?: { dealerId?: string; status?: string; limit?: number }) => {
+  const { dealerId, status, limit = 50 } = filters || {};
+  
+  return prisma.order.findMany({
+    where: {
+      ...(dealerId && { dealerId }),
+      ...(status && { status })
+    },
+    include: { items: true },
+    orderBy: { createdAt: 'desc' },
+    take: limit
+  });
+};

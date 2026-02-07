@@ -2,6 +2,12 @@ import amqp from 'amqplib';
 import { logger } from '../utils/logger';
 import { sendEmail } from '../channels/email.channel';
 
+// Function to get telegramBot instance
+let getTelegramBot: (() => any) | null = null;
+export const setTelegramBotGetter = (getter: () => any) => {
+  getTelegramBot = getter;
+};
+
 export const connectConsumer = async () => {
   try {
     const connection = await amqp.connect(process.env.RABBITMQ_URL || 'amqp://localhost');
@@ -35,6 +41,17 @@ export const connectConsumer = async () => {
             if (data.email) {
               await sendEmail(data.email, 'Welcome to Modern Colours', `Dear ${data.businessName}, your registration is pending review.`);
             }
+            // Send Telegram notification to admins
+            if (getTelegramBot) {
+              const bot = getTelegramBot();
+              if (bot) {
+                const message = `🆕 *New Dealer Registration*\n\nBusiness: ${data.businessName}\nEmail: ${data.email}\nStatus: Pending Review`;
+                const adminIds = require('../config').config.telegram?.adminIds || [];
+                for (const adminId of adminIds) {
+                  await bot.sendNotification(adminId, message);
+                }
+              }
+            }
             break;
           case 'dealer.approved':
             if (data.email) {
@@ -42,8 +59,24 @@ export const connectConsumer = async () => {
             }
             break;
           case 'order.created':
-            // Notify Admin or Dealer
             logger.info(`Order Created: ${data.orderId}`);
+            // Send Telegram notification
+            if (getTelegramBot) {
+              const bot = getTelegramBot();
+              if (bot) {
+                await bot.notifyOrderCreated(data);
+              }
+            }
+            break;
+          case 'order.updated':
+            logger.info(`Order Updated: ${data.orderId} - Status: ${data.status}`);
+            // Send Telegram notification
+            if (getTelegramBot) {
+              const bot = getTelegramBot();
+              if (bot) {
+                await bot.notifyOrderUpdated(data);
+              }
+            }
             break;
           case 'inventory.stock.low':
             logger.warn(`Low Stock Alert: ${data.productId} at ${data.warehouseId}`);
@@ -52,6 +85,16 @@ export const connectConsumer = async () => {
               `Low Stock Alert: Product ${data.productId}`,
               `Warehouse: ${data.warehouseId}\nCurrent Quantity: ${data.currentQty}\nPlease restock immediately.`
             );
+            // Send Telegram notification to admins
+            if (getTelegramBot) {
+              const bot = getTelegramBot();
+              if (bot) {
+                await bot.notifyLowStock(
+                  { id: data.productId, name: data.productName },
+                  data.currentQty
+                );
+              }
+            }
             break;
         }
 

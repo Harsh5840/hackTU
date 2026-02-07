@@ -4,6 +4,8 @@ import { body } from 'express-validator';
 
 const router = Router();
 
+router.get('/', orderController.getAllOrders);
+
 router.post(
   '/create',
   [
