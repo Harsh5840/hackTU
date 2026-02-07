@@ -105,6 +105,7 @@ export const getAllDealers = async (filters: any = {}, limit: number = 100) => {
     select: {
       id: true,
       dealerCode: true,
+      userId: true,
       businessName: true,
       businessType: true,
       email: true,

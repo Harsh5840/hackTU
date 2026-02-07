@@ -345,24 +345,21 @@ export default function AdminDashboard() {
                     {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}
                   </td>
                   <td className="py-3 px-4 text-sm font-semibold text-gray-900">
-                    {order.finalAmount 
-                      ? `₹${formatPrice(typeof order.finalAmount === 'string' ? parseFloat(order.finalAmount) : order.finalAmount)}`
-                      : '₹0'
-                    }
+                    ₹{formatPrice(parseFloat(order.totalAmount as string))}
                   </td>
                   <td className="py-3 px-4 text-sm">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        order.status === 'DELIVERED'
+                        (order.orderStatus || order.status) === 'DELIVERED'
                           ? 'bg-green-100 text-green-800'
-                          : order.status === 'SHIPPED'
+                          : (order.orderStatus || order.status) === 'SHIPPED'
                             ? 'bg-blue-100 text-blue-800'
-                            : order.status === 'APPROVED'
+                            : (order.orderStatus || order.status) === 'APPROVED'
                               ? 'bg-indigo-100 text-indigo-800'
                               : 'bg-yellow-100 text-yellow-800'
                       }`}
                     >
-                      {order.status || 'PENDING'}
+                      {order.orderStatus || order.status || 'PENDING'}
                     </span>
                   </td>
                 </tr>

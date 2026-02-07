@@ -21,27 +21,26 @@ import { Eye, Download } from 'lucide-react';
 interface OrderItem {
   id: string;
   productId: string;
+  productName: string;
   quantity: number;
-  unitPrice: number;
-  discountAmount: number;
-  taxAmount: number;
-  totalPrice: number;
-  product: {
-    id: string;
-    name: string;
-    sku: string;
-  };
+  unitPrice: string | number;
+  discountAmount: string | number;
+  taxAmount: string | number;
+  lineTotal: string | number;
+  fulfilledQuantity?: number;
 }
 
 interface Order {
   id: string;
   orderNumber: string;
   dealerId: string;
-  status: string;
-  totalAmount: number;
-  taxAmount: number;
-  discountAmount: number;
-  finalAmount: number;
+  orderStatus?: string;
+  status?: string;
+  totalAmount: string | number;
+  subtotal?: string | number;
+  taxAmount: string | number;
+  discountAmount: string | number;
+  shippingCharges?: string | number;
   paymentMethod: string;
   paymentStatus: string;
   deliveryAddress: {
@@ -50,7 +49,7 @@ interface Order {
     city: string;
     state: string;
     pincode: string;
-    phone: string;
+    phone?: string;
   };
   items: OrderItem[];
   createdAt: string;
@@ -230,12 +229,12 @@ export default function OrdersPage() {
                     {new Date(order.createdAt).toLocaleDateString()}
                   </td>
                   <td className="py-4 px-6 text-right font-semibold text-gray-900">
-                    ₹{formatPrice(order.finalAmount)}
+                    ₹{formatPrice(parseFloat(order.totalAmount as string))}
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex justify-center">
                       <Select
-                        value={order.status}
+                        value={order.orderStatus || order.status || 'PENDING'}
                         onValueChange={(value) =>
                           handleStatusUpdate(order.id, value)
                         }
@@ -243,7 +242,7 @@ export default function OrdersPage() {
                       >
                         <SelectTrigger
                           className={`w-32 text-xs ${
-                            STATUS_COLORS[order.status] || ''
+                            STATUS_COLORS[order.orderStatus || order.status || 'PENDING'] || ''
                           }`}
                         >
                           <SelectValue />
@@ -375,14 +374,14 @@ export default function OrdersPage() {
                     {selectedOrder.items.map((item) => (
                       <tr key={item.id} className="border-b">
                         <td className="py-2 text-gray-900">
-                          {item.product.name}
+                          {item.productName}
                         </td>
                         <td className="text-right text-gray-600">{item.quantity}</td>
                         <td className="text-right text-gray-600">
-                          ₹{formatPrice(item.unitPrice)}
+                          ₹{formatPrice(parseFloat(item.unitPrice as string))}
                         </td>
                         <td className="text-right font-semibold text-gray-900">
-                          ₹{formatPrice(item.totalPrice)}
+                          ₹{formatPrice(parseFloat(item.lineTotal as string))}
                         </td>
                       </tr>
                     ))}
@@ -394,23 +393,23 @@ export default function OrdersPage() {
               <div className="space-y-2 border-t pt-4">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
-                  <span>₹{selectedOrder.totalAmount.toFixed(2)}</span>
+                  <span>₹{(parseFloat((selectedOrder.subtotal || selectedOrder.totalAmount) as string)).toFixed(2)}</span>
                 </div>
-                {selectedOrder.discountAmount > 0 && (
+                {parseFloat(selectedOrder.discountAmount as string) > 0 && (
                   <div className="flex justify-between text-gray-600">
                     <span>Discount</span>
-                    <span>-₹{selectedOrder.discountAmount.toFixed(2)}</span>
+                    <span>-₹{parseFloat(selectedOrder.discountAmount as string).toFixed(2)}</span>
                   </div>
                 )}
-                {selectedOrder.taxAmount > 0 && (
+                {parseFloat(selectedOrder.taxAmount as string) > 0 && (
                   <div className="flex justify-between text-gray-600">
                     <span>Tax</span>
-                    <span>₹{selectedOrder.taxAmount.toFixed(2)}</span>
+                    <span>₹{parseFloat(selectedOrder.taxAmount as string).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-semibold text-gray-900 text-lg border-t pt-2">
                   <span>Total</span>
-                  <span>₹{selectedOrder.finalAmount.toFixed(2)}</span>
+                  <span>₹{parseFloat(selectedOrder.totalAmount as string).toFixed(2)}</span>
                 </div>
               </div>
 

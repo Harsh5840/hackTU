@@ -104,8 +104,17 @@ async def get_regional_sales() -> Dict[str, Any]:
         orders = orders_res.json().get("data", [])
         dealers = dealers_res.json().get("data", [])
         
-        # Map dealer IDs to states
-        dealer_state_map = {d.get("userId", d.get("id")): d.get("state", "Unknown") for d in dealers}
+        # Map dealer IDs to states - try userId, then id, then dealerCode
+        dealer_state_map = {}
+        for d in dealers:
+            state = d.get("state", "Unknown")
+            # Add all possible identifiers to the map
+            if d.get("userId"):
+                dealer_state_map[d.get("userId")] = state
+            if d.get("id"):
+                dealer_state_map[d.get("id")] = state
+            if d.get("dealerCode"):
+                dealer_state_map[d.get("dealerCode")] = state
         
         # Aggregate sales by state
         state_sales = {}
