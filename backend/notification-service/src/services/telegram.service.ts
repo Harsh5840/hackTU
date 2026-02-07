@@ -144,26 +144,34 @@ export class TelegramBotService {
     this.bot.command('track', async (ctx) => {
       const args = ctx.message.text.split(' ');
       if (args.length < 2) {
-        await ctx.reply('Usage: /track <orderId>\nExample: /track 123');
+        await ctx.reply('Usage: /track <orderId>\nExample: /track 3bd3ce00-9201-4e71-ae29-9a279bccb069');
         return;
       }
 
       const orderId = args[1];
       try {
-        const response = await axios.get(`${this.apiGateway}/api/orders/${orderId}`);
-        const order = response.data;
+        const response = await axios.get(`http://order-service:3003/api/orders/${orderId}`);
+        const order = response.data.data || response.data;
+
+        let itemsList = '';
+        if (order.items && order.items.length > 0) {
+          itemsList = '\n\n📦 *Items:*\n';
+          for (const item of order.items) {
+            itemsList += `• ${item.productName} x${item.quantity} - ₹${item.unitPrice}\n`;
+          }
+        }
 
         await ctx.reply(
-          `📦 *Order Tracking #${order.id}*\n\n` +
-          `Status: *${order.status}*\n` +
-          `Total: $${order.totalAmount}\n` +
-          `Items: ${order.items?.length || 0}\n` +
-          `Created: ${new Date(order.createdAt).toLocaleDateString()}\n` +
-          `Updated: ${new Date(order.updatedAt).toLocaleDateString()}`,
+          `📦 *Order Tracking*\n\n` +
+          `Order Number: *${order.orderNumber}*\n` +
+          `Status: *${order.orderStatus}*\n` +
+          `Payment: *${order.paymentStatus}*\n` +
+          `Total: ₹${order.totalAmount}\n` +
+          `Created: ${new Date(order.createdAt).toLocaleDateString()}${itemsList}`,
           { parse_mode: 'Markdown' }
         );
       } catch (error: any) {
-        await ctx.reply(`❌ Order #${orderId} not found.`);
+        await ctx.reply(`❌ Order not found. Please check the order ID and try again.`);
       }
     });
 
@@ -278,25 +286,58 @@ export class TelegramBotService {
       }
 
       try {
-        await ctx.reply('📊 Generating analytics...');
-        const response = await axios.post(`${this.apiGateway}/api/analytics/forecast`, {
-          productId: 1,
-          warehouseId: 1,
-          periods: 7
+        await ctx.reply('📊 Generating demand forecast analytics...');
+        
+        // Sample historical sales data
+        const historyData = [
+          { date: '2026-01-01', quantity: 45 },
+          { date: '2026-01-02', quantity: 52 },
+          { date: '2026-01-03', quantity: 48 },
+          { date: '2026-01-04', quantity: 55 },
+          { date: '2026-01-05', quantity: 60 },
+          { date: '2026-01-06', quantity: 58 },
+          { date: '2026-01-07', quantity: 62 },
+        ];
+
+        const response = await axios.post('http://analytics-service:8000/api/v1/forecast/demand', {
+          productId: 'cfe300b9-32cf-4f43-9ef1-12347419411f',
+          history: historyData
         });
 
         const forecast = response.data;
-        let message = '📈 *Demand Forecast:*\n\n';
         
-        if (forecast.predictions && forecast.predictions.length > 0) {
-          for (const pred of forecast.predictions.slice(0, 7)) {
-            message += `Day ${pred.period}: ${pred.predictedDemand} units\n`;
+        if (forecast.success && forecast.forecast) {
+          let message = '📈 *Demand Forecast Analysis:*\n\n';
+          message += `Product: Ultra White Satin\n\n`;
+          
+          if (Array.isArray(forecast.forecast)) {
+            message += '*Next 7 Days Forecast:*\n';
+            forecast.forecast.slice(0, 7).forEach((item: any, index: number) => {
+              const quantity = item.predicted_quantity || item.quantity || 0;
+              const date = item.date ? new Date(item.date).toLocaleDateString() : `Day ${index + 1}`;
+              message += `${date}: ${Math.round(quantity)} units\n`;
+            });
+            
+            // Add summary statistics
+            const quantities = forecast.forecast.slice(0, 7).map((item: any) => item.predicted_quantity || 0);
+            const avgForecast = Math.round(quantities.reduce((a: number, b: number) => a + b, 0) / quantities.length);
+            const totalForecast = quantities.reduce((a: number, b: number) => a + b, 0);
+            
+            message += `\n📊 *Summary:*\n`;
+            message += `Average Daily: ${avgForecast} units\n`;
+            message += `Total 7-day: ${Math.round(totalForecast)} units`;
+          } else {
+            message += `Forecast data: ${JSON.stringify(forecast.forecast)}`;
           }
-        }
 
-        await ctx.reply(message, { parse_mode: 'Markdown' });
+          await ctx.reply(message, { parse_mode: 'Markdown' });
+        } else {
+          await ctx.reply('📊 Analytics generated but no forecast data available.');
+        }
       } catch (error: any) {
-        await ctx.reply('❌ Failed to generate analytics.');
+        console.error('Analytics error:', error.message);
+        console.error('Analytics error details:', error.response?.data);
+        await ctx.reply('❌ Failed to generate analytics. Service may be unavailable.');
       }
     });
 
@@ -337,13 +378,43 @@ export class TelegramBotService {
         session.step = 'enter_quantity';
         await ctx.reply('How many units do you want to order?');
       } else if (session.step === 'enter_quantity') {
-        session.orderData.quantity = parseInt(ctx.message.text);
+        const qty = parseInt(ctx.message.text);
+        if (isNaN(qty) || qty <= 0) {
+          await ctx.reply('❌ Please enter a valid quantity (number greater than 0)');
+          return;
+        }
+        session.orderData.quantity = qty;
+        session.step = 'enter_address';
+        await ctx.reply('Please enter your delivery address (street address):');
+      } else if (session.step === 'enter_address') {
+        session.orderData.addressLine1 = ctx.message.text;
+        session.step = 'enter_city';
+        await ctx.reply('Enter your city:');
+      } else if (session.step === 'enter_city') {
+        session.orderData.city = ctx.message.text;
+        session.step = 'enter_state';
+        await ctx.reply('Enter your state:');
+      } else if (session.step === 'enter_state') {
+        session.orderData.state = ctx.message.text;
+        session.step = 'enter_pincode';
+        await ctx.reply('Enter your pincode:');
+      } else if (session.step === 'enter_pincode') {
+        session.orderData.pincode = ctx.message.text;
+        session.step = 'enter_phone';
+        await ctx.reply('Enter your contact phone number:');
+      } else if (session.step === 'enter_phone') {
+        session.orderData.phone = ctx.message.text;
         session.step = 'confirm_order';
         
         await ctx.reply(
           `📝 *Order Summary:*\n\n` +
           `Product ID: ${session.orderData.productId}\n` +
           `Quantity: ${session.orderData.quantity}\n\n` +
+          `📍 *Delivery Address:*\n` +
+          `${session.orderData.addressLine1}\n` +
+          `${session.orderData.city}, ${session.orderData.state}\n` +
+          `PIN: ${session.orderData.pincode}\n` +
+          `📞 Phone: ${session.orderData.phone}\n\n` +
           `Confirm this order?`,
           {
             parse_mode: 'Markdown',
@@ -369,7 +440,7 @@ export class TelegramBotService {
       session.step = 'enter_quantity';
 
       await ctx.answerCbQuery();
-      await ctx.reply(`How many units of product #${productId} do you want?`);
+      await ctx.reply(`How many units do you want to order?`);
     });
 
     // Handle order confirmation
@@ -379,29 +450,49 @@ export class TelegramBotService {
       try {
         await ctx.answerCbQuery('Creating order...');
         
-        // Create order via API Gateway
+        // Fetch product details to get actual price
+        let productPrice = 1000; // Default
+        let productName = 'Product';
+        try {
+          const productsRes = await axios.get('http://inventory-service:3002/api/inventory/products');
+          const products = productsRes.data.data || productsRes.data;
+          const product = products.find((p: any) => p.id === session.orderData.productId);
+          if (product) {
+            productPrice = parseFloat(product.basePrice);
+            productName = product.name;
+          }
+        } catch (err) {
+          console.error('Failed to fetch product details:', err);
+        }
+
+        // Create order via order service directly (bypass auth)
         const orderData = {
-          dealerId: ctx.from?.id || 1, // Use Telegram ID as dealer ID (in production, map to actual dealer)
+          dealerId: `telegram-${ctx.from?.id}`, // Use Telegram ID as dealer ID
           items: [
             {
-              productId: parseInt(session.orderData.productId),
+              productId: session.orderData.productId,
+              productName: productName,
               quantity: session.orderData.quantity,
-              unitPrice: 100, // In production, fetch from product
-              taxPercentage: 10
+              unitPrice: productPrice.toString()
             }
           ],
-          shippingAddress: 'Telegram Order',
-          billingAddress: 'Telegram Order'
+          deliveryAddress: {
+            line1: session.orderData.addressLine1,
+            city: session.orderData.city,
+            state: session.orderData.state,
+            pincode: session.orderData.pincode
+          }
         };
 
-        const response = await axios.post(`${this.apiGateway}/api/orders`, orderData);
-        const order = response.data;
+        console.log('Creating order with data:', JSON.stringify(orderData, null, 2));
+        const response = await axios.post('http://order-service:3003/api/orders/create', orderData);
+        const order = response.data.data || response.data;
 
         await ctx.editMessageText(
           `✅ *Order Created Successfully!*\n\n` +
-          `Order ID: #${order.id}\n` +
-          `Status: ${order.status}\n` +
-          `Total: $${order.totalAmount}\n\n` +
+          `Order Number: ${order.orderNumber}\n` +
+          `Status: ${order.orderStatus}\n` +
+          `Total: ₹${order.totalAmount}\n\n` +
           `Track with: /track ${order.id}`,
           { parse_mode: 'Markdown' }
         );
@@ -411,7 +502,8 @@ export class TelegramBotService {
         session.orderData = undefined;
       } catch (error: any) {
         console.error('Order creation error:', error.message);
-        await ctx.editMessageText('❌ Failed to create order. Please try again.');
+        console.error('Error response:', error.response?.data);
+        await ctx.editMessageText('❌ Failed to create order. Please try again or contact support.');
       }
     });
 

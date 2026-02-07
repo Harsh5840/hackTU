@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    /* Modern Colours Purple: #7C3479 */
+    --primary: 302 37% 35%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    /* Modern Colours Yellow: #F9C807 */
+    --accent: 47 96% 50%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 302 37% 35%;
+    /* Modern Colours themed charts */
+    --chart-1: 302 37% 35%; /* Purple */
+    --chart-2: 47 96% 50%; /* Yellow */
+    --chart-3: 356 65% 52%; /* Red #D93238 */
+    --chart-4: 173 58% 39%;
+    --chart-5: 197 37% 24%;
+    --radius: 0.5rem;
+    /* Sidebar with Modern Colours Purple */
+    --sidebar-background: 302 37% 35%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 302 37% 35%;
+    --sidebar-accent: 302 37% 45%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 302 37% 30%;
+    --sidebar-ring: 47 96% 50%;
+  }
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    /* Modern Colours Purple */
+    --primary: 302 37% 45%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    /* Modern Colours Yellow */
+    --accent: 47 96% 50%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 302 37% 45%;
+    --chart-1: 302 37% 45%; /* Purple */
+    --chart-2: 47 96% 50%; /* Yellow */
+    --chart-3: 356 65% 52%; /* Red */
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    /* Dark sidebar */
+    --sidebar-background: 302 37% 25%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 47 96% 50%;
+    --sidebar-primary-foreground: 0 0% 9%;
+    --sidebar-accent: 302 37% 35%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 302 37% 20%;
+    --sidebar-ring: 47 96% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

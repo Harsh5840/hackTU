@@ -86,3 +86,91 @@ export const adjustStock = async (data: any) => {
   
   return updated;
 };
+
+export const getProductById = async (id: string) => {
+  return prisma.product.findUnique({
+    where: { id },
+    include: { category: true }
+  });
+};
+
+export const createProduct = async (data: any) => {
+  const productData: Prisma.ProductCreateInput = {
+    sku: data.sku,
+    name: data.name,
+    description: data.description,
+    category: { connect: { id: Number(data.categoryId) } },
+    brand: data.brand || 'Modern Colours',
+    colorCode: data.colorCode,
+    colorName: data.colorName,
+    finishType: data.finishType || 'MATTE',
+    containerSize: Number(data.containerSize),
+    containerType: data.containerType,
+    unitOfMeasure: data.unitOfMeasure,
+    basePrice: Number(data.basePrice),
+    mrp: Number(data.mrp),
+    reorderLevel: Number(data.reorderLevel) || 10,
+    reorderQuantity: Number(data.reorderQuantity) || 50,
+    leadTimeDays: Number(data.leadTimeDays) || 7,
+    isFastMoving: data.isFastMoving || false,
+    isSeasonal: data.isSeasonal || false,
+    season: data.season,
+    isActive: data.isActive !== false,
+    imageUrls: data.imageUrls || []
+  };
+
+  const product = await prisma.product.create({ data: productData });
+  publishEvent('product.created', { productId: product.id });
+  return product;
+};
+
+export const updateProduct = async (id: string, data: any) => {
+  const updateData: Prisma.ProductUpdateInput = {};
+  
+  if (data.sku) updateData.sku = data.sku;
+  if (data.name) updateData.name = data.name;
+  if (data.description !== undefined) updateData.description = data.description;
+  if (data.categoryId) updateData.category = { connect: { id: Number(data.categoryId) } };
+  if (data.brand) updateData.brand = data.brand;
+  if (data.colorCode !== undefined) updateData.colorCode = data.colorCode;
+  if (data.colorName !== undefined) updateData.colorName = data.colorName;
+  if (data.finishType) updateData.finishType = data.finishType;
+  if (data.containerSize !== undefined) updateData.containerSize = Number(data.containerSize);
+  if (data.containerType) updateData.containerType = data.containerType;
+  if (data.unitOfMeasure) updateData.unitOfMeasure = data.unitOfMeasure;
+  if (data.basePrice !== undefined) updateData.basePrice = Number(data.basePrice);
+  if (data.mrp !== undefined) updateData.mrp = Number(data.mrp);
+  if (data.reorderLevel !== undefined) updateData.reorderLevel = Number(data.reorderLevel);
+  if (data.reorderQuantity !== undefined) updateData.reorderQuantity = Number(data.reorderQuantity);
+  if (data.leadTimeDays !== undefined) updateData.leadTimeDays = Number(data.leadTimeDays);
+  if (data.isFastMoving !== undefined) updateData.isFastMoving = Boolean(data.isFastMoving);
+  if (data.isSeasonal !== undefined) updateData.isSeasonal = Boolean(data.isSeasonal);
+  if (data.season !== undefined) updateData.season = data.season;
+  if (data.isActive !== undefined) updateData.isActive = Boolean(data.isActive);
+  if (data.imageUrls) updateData.imageUrls = data.imageUrls;
+
+  const product = await prisma.product.update({
+    where: { id },
+    data: updateData
+  });
+
+  publishEvent('product.updated', { productId: product.id });
+  return product;
+};
+
+export const deleteProduct = async (id: string) => {
+  // Soft delete by setting isActive to false
+  const product = await prisma.product.update({
+    where: { id },
+    data: { isActive: false }
+  });
+
+  publishEvent('product.deleted', { productId: product.id });
+  return product;
+};
+
+export const getAllCategories = async () => {
+  return prisma.category.findMany({
+    orderBy: { name: 'asc' }
+  });
+};

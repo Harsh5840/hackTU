@@ -1,0 +1,3 @@
+{"level":"error","message":"GET /admin 404 10ms - ::1","timestamp":"2026-02-07 21:31:40"}
+{"level":"error","message":"GET /favicon.ico 404 1ms - ::1","timestamp":"2026-02-07 21:31:41"}
+{"level":"error","message":"GET / 404 1ms - ::1","timestamp":"2026-02-07 21:31:46"}

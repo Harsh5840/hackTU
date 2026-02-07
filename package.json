@@ -8,7 +8,9 @@
     "shared/*"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev -w backend/api-gateway\" \"npm run dev -w frontend/admin-dashboard\"",
+    "dev": "concurrently \"npm run dev -w backend/api-gateway\" \"cd frontend && npm run dev\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "docker-compose up -d",
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
     "lint": "eslint ."

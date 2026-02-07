@@ -49,7 +49,16 @@ export const loginUser = async (data: any) => {
     }
   });
 
-  return { tokens, user: { id: user.id, email: user.email, role: user.role } };
+  return { 
+    tokens, 
+    user: { 
+      id: user.id, 
+      email: user.email, 
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role 
+    } 
+  };
 };
 
 export const forgotPassword = async (email: string) => {

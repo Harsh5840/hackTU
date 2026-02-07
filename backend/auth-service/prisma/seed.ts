@@ -81,8 +81,10 @@ async function main() {
 
   // 5. Create Dealers
   const dealerPassword = await bcrypt.hash('dealer123', 10);
-  const dealerUser = await prisma.user.create({
-    data: {
+  const dealerUser = await prisma.user.upsert({
+    where: { email: 'dealer1@example.com' },
+    update: {},
+    create: {
       email: 'dealer1@example.com',
       passwordHash: dealerPassword,
       firstName: 'Rajesh',
@@ -103,6 +105,37 @@ async function main() {
       }
     }
   });
+
+  // 6. Create Buyer Users
+  const buyerPassword = await bcrypt.hash('buyer123', 10);
+  
+  const buyer1 = await prisma.user.upsert({
+    where: { email: 'buyer1@example.com' },
+    update: {},
+    create: {
+      email: 'buyer1@example.com',
+      passwordHash: buyerPassword,
+      firstName: 'Amit',
+      lastName: 'Kumar',
+      role: UserRole.BUYER,
+      isVerified: true,
+    },
+  });
+  console.log({ buyer1 });
+
+  const buyer2 = await prisma.user.upsert({
+    where: { email: 'buyer2@example.com' },
+    update: {},
+    create: {
+      email: 'buyer2@example.com',
+      passwordHash: buyerPassword,
+      firstName: 'Priya',
+      lastName: 'Sharma',
+      role: UserRole.BUYER,
+      isVerified: true,
+    },
+  });
+  console.log({ buyer2 });
 
   console.log('✅ Seed completed!');
 }

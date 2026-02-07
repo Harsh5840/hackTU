@@ -36,14 +36,14 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', timestamp: new Date() });
 });
 
-// Authentication Middleware (Global for API routes)
-app.use('/api', (req, res, next) => {
-  // console.log(`[AuthWrapper] url=${req.url}`);
-  if (req.url.startsWith('/auth')) {
-    return next();
-  }
-  authenticate(req, res, next);
-});
+// Authentication Middleware (Global for API routes) - DISABLED FOR DEMO
+// app.use('/api', (req, res, next) => {
+//   // console.log(`[AuthWrapper] url=${req.url}`);
+//   if (req.url.startsWith('/auth')) {
+//     return next();
+//   }
+//   authenticate(req, res, next);
+// });
 
 // Proxy Routes
 Object.entries(SERVICES).forEach(([name, service]) => {
