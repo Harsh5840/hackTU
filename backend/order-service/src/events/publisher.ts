@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import amqp from 'amqplib';
 import { logger } from '../utils/logger';
 
@@ -21,7 +22,7 @@ export const publishEvent = (routingKey: string, data: any) => {
   }
   
   const payload = JSON.stringify({
-    eventId: crypto.randomUUID(),
+    eventId: randomUUID(),
     timestamp: new Date().toISOString(),
     source: 'order-service',
     data

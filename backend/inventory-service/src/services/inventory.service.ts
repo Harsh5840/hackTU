@@ -1,4 +1,5 @@
 import prisma from '../config/database';
+import { TransactionType, Prisma } from '@prisma/client';
 import { calculateStockStatus } from '../utils/stockCalculations';
 import { publishEvent } from '../events/publisher';
 import { logger } from '../utils/logger';
@@ -8,6 +9,14 @@ export const getInventoryByWarehouse = async (warehouseId: string) => {
     where: { warehouseId },
     include: { product: true }
   });
+};
+
+export const getAllProducts = async () => {
+  return prisma.product.findMany();
+};
+
+export const getAllWarehouses = async () => {
+  return prisma.warehouse.findMany();
 };
 
 export const adjustStock = async (data: any) => {
@@ -30,17 +39,19 @@ export const adjustStock = async (data: any) => {
   // 2. Transact
   const updated = await prisma.$transaction(async (tx) => {
     // Record Transaction
-    await tx.inventoryTransaction.create({
-      data: {
+    const transactionData: Prisma.InventoryTransactionUncheckedCreateInput = {
         productId,
         warehouseId,
-        transactionType: 'ADJUSTMENT',
+        transactionType: TransactionType.ADJUSTMENT,
         quantityBefore: currentQty,
-        quantityChange,
+        quantityChange: Number(quantityChange),
         quantityAfter: newQty,
         performedById: userId,
-        notes: reason
-      }
+        notes: reason,
+    };
+
+    await tx.inventoryTransaction.create({
+      data: transactionData
     });
 
     // Update Stock

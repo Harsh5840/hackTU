@@ -25,7 +25,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
 }));
 app.use(compression());
-app.use(express.json({ limit: '10mb' }));
+// app.use(express.json({ limit: '10mb' })); // Commenting out to avoid conflict with http-proxy-middleware
 
 // Logging
 app.use(morgan('dev'));
@@ -37,7 +37,13 @@ app.get('/health', (req, res) => {
 });
 
 // Authentication Middleware (Global for API routes)
-app.use('/api', authenticate);
+app.use('/api', (req, res, next) => {
+  // console.log(`[AuthWrapper] url=${req.url}`);
+  if (req.url.startsWith('/auth')) {
+    return next();
+  }
+  authenticate(req, res, next);
+});
 
 // Proxy Routes
 Object.entries(SERVICES).forEach(([name, service]) => {
@@ -45,8 +51,12 @@ Object.entries(SERVICES).forEach(([name, service]) => {
     app.use(route, createProxyMiddleware({
       target: service.url,
       changeOrigin: true,
-      pathRewrite: {
-        [`^${route}`]: '', // Remove /api/{service} prefix when forwarding
+      pathRewrite: (path) => {
+        // Special handling for analytics service - rewrite path
+        if (name === 'analytics') {
+          return path.replace('/api/analytics', '/api/v1');
+        }
+        return path;
       },
       onProxyReq: (proxyReq: any, req: any, res: any) => {
            // Pass User ID if authenticated

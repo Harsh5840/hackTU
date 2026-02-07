@@ -1,4 +1,5 @@
 import amqp from 'amqplib';
+import crypto from 'crypto';
 import { logger } from '../utils/logger';
 
 let channel: amqp.Channel;

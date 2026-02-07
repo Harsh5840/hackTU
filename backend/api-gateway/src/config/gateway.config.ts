@@ -19,7 +19,7 @@ export const SERVICES = {
     routes: ['/api/dealers']
   },
   analytics: {
-    url: process.env.ANALYTICS_SERVICE_URL || 'http://localhost:3005',
+    url: process.env.ANALYTICS_SERVICE_URL || 'http://analytics-service:8000',
     routes: ['/api/analytics']
   },
   forecast: {

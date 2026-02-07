@@ -1,0 +1,37 @@
+[34mΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù[0m
+[34mΓòæ  ≡ƒÜÇ Backend E2E Test Suite - Modern Colours Supply Chain       Γòæ[0m
+[34mΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥[0m
+
+[33m≡ƒôï Testing Authentication Flows...[0m
+
+[32m[1. Admin Login] SUCCESS[0m
+[32m[2. Dealer Login] SUCCESS[0m
+
+[33m≡ƒôª Testing Inventory Flows...[0m
+
+[32m[3. Get Product ID] Found P-100 -> cfe300b9-32cf-4f43-9ef1-12347419411f[0m
+[32m[4. Get Warehouse ID] Found WH-001 -> 3a554195-d2c5-4b25-a5f6-76f9d308f67c[0m
+[32m[5. Adjust Stock] Stock adjusted successfully (Quantity: 50)[0m
+
+[33m≡ƒ¢Æ Testing Order Flows...[0m
+
+[33m[6. Create Order] Service not available (requires libssl.so.1.1)[0m
+
+[33m≡ƒôè Testing Analytics Flows...[0m
+
+[32m[7. Demand Forecast] Generated 30 forecast points[0m
+[32m[8. Stock Recommendations] Generated 1 recommendations[0m
+
+[34mΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù[0m
+[34mΓòæ                         TEST SUMMARY                            Γòæ[0m
+[34mΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥[0m
+
+[36mTotal Tests:[0m       8
+[32mPassed:[0m           7/8
+[31mFailed:[0m           0
+[33mWarnings:[0m         1
+
+[32mSuccess Rate: 87.5%[0m
+
+[32mΓ£à All E2E Tests Completed Successfully![0m
+

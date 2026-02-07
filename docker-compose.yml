@@ -12,7 +12,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data 
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - mc_network
     healthcheck:
@@ -56,6 +56,7 @@ services:
       - ORDER_SERVICE_URL=http://order-service:3003
       - DEALER_SERVICE_URL=http://dealer-service:3004
       - ANALYTICS_SERVICE_URL=http://analytics-service:8000
+      - JWT_SECRET=dev_secret
     depends_on:
       - auth-service
       - inventory-service

@@ -12,6 +12,26 @@ export const getWarehouseInventory = async (req: Request, res: Response) => {
   }
 };
 
+export const getProducts = async (req: Request, res: Response) => {
+  try {
+    const data = await inventoryService.getAllProducts();
+    res.json({ success: true, data });
+  } catch (err: any) {
+    logger.error(err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getWarehouses = async (req: Request, res: Response) => {
+  try {
+    const data = await inventoryService.getAllWarehouses();
+    res.json({ success: true, data });
+  } catch (err: any) {
+    logger.error(err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 export const adjustStock = async (req: Request, res: Response) => {
   try {
     const result = await inventoryService.adjustStock(req.body);

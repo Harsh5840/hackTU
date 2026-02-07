@@ -1,5 +1,7 @@
 FROM node:18-alpine
 
+RUN apk -U add openssl
+
 WORKDIR /app
 
 COPY package*.json ./
