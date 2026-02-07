@@ -1,0 +1,254 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum BusinessType {
+  PROPRIETORSHIP
+  PARTNERSHIP
+  PRIVATE_LIMITED
+  LLP
+}
+
+enum VerificationStatus {
+  PENDING
+  DOCUMENTS_SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  INFO_REQUESTED
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum DocumentType {
+  GST_CERTIFICATE
+  PAN_CARD
+  ADDRESS_PROOF
+  BANK_PROOF
+  SHOP_PHOTO
+  OWNER_PHOTO
+  ADDITIONAL
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum CreditTransactionType {
+  CREDIT_USED
+  PAYMENT_RECEIVED
+  LIMIT_INCREASED
+  LIMIT_DECREASED
+}
+
+enum TerritoryType {
+  STATE
+  REGION
+  CITY
+  CUSTOM
+}
+
+// Models
+model Dealer {
+  id                String             @id @default(uuid())
+  dealerCode        String             @unique
+  userId            String             @unique // Link to Auth User
+  
+  businessName      String
+  businessType      BusinessType
+  registrationNumber String?
+  gstNumber         String             @unique
+  panNumber         String             @unique
+  establishmentYear Int?
+  
+  // Contact Info
+  firstName         String
+  lastName          String
+  designation       String
+  email             String             @unique
+  phone             String             @unique
+  alternatePhone    String?
+  
+  // Address Info
+  addressLine1      String
+  addressLine2      String?
+  city              String
+  state             String
+  pincode           String
+  country           String             @default("India")
+  latitude          Float?
+  longitude         Float?
+  
+  // Bank Details
+  bankAccountName    String
+  bankAccountNumber  String
+  bankIfscCode       String
+  bankName           String
+  bankBranchName     String
+  
+  // Business Details
+  annualTurnover     Float?
+  numberOfEmployees  Int?
+  warehouseArea      Float?
+  transportAvailable Boolean           @default(false)
+  
+  // Status & Logic
+  verificationStatus VerificationStatus @default(PENDING)
+  accountStatus      AccountStatus      @default(ACTIVE)
+  dealerTier        Int                @default(2) // 1: Primary, 2: Secondary
+  discountPercentage Float              @default(0)
+  
+  // Credit info
+  creditLimit        Float              @default(0)
+  availableCredit    Float              @default(0)
+  creditDays         Int                @default(0)
+  creditScore        Int                @default(600)
+  
+  // Hierarchy
+  parentDealerId     String?
+  parentDealer       Dealer?            @relation("DealerHierarchy", fields: [parentDealerId], references: [id])
+  subDealers         Dealer[]           @relation("DealerHierarchy")
+  
+  // Timestamps
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  approvedAt        DateTime?
+  approvedBy        String?            // Admin User ID
+  
+  // Relationships
+  documents         DealerDocument[]
+  references        DealerReference[]
+  creditHistory     CreditTransaction[]
+  performance       PerformanceMetric[]
+  reviews           DealerReview[]
+  territoryAssignments DealerTerritoryAssignment[]
+  pricingRules      DealerPricingRule[]
+}
+
+model DealerDocument {
+  id                String       @id @default(uuid())
+  dealerId          String
+  documentType      DocumentType
+  fileName          String
+  fileUrl           String
+  fileSize          Int
+  fileType          String
+  status            ReviewStatus @default(PENDING)
+  expiryDate        DateTime?
+  comments          String?
+  uploadedAt        DateTime     @default(now())
+  reviewedAt        DateTime?
+  reviewedBy        String?
+
+  dealer            Dealer       @relation(fields: [dealerId], references: [id])
+}
+
+model DealerReference {
+  id           String @id @default(uuid())
+  dealerId     String
+  name         String
+  company      String
+  phone        String
+  email        String
+  relationship String
+  
+  dealer       Dealer @relation(fields: [dealerId], references: [id])
+}
+
+model CreditTransaction {
+  id            String                @id @default(uuid())
+  dealerId      String
+  type          CreditTransactionType
+  amount        Float
+  balance       Float
+  description   String
+  orderId       String?
+  paymentId     String?
+  createdAt     DateTime              @default(now())
+  
+  dealer        Dealer                @relation(fields: [dealerId], references: [id])
+}
+
+model PerformanceMetric {
+  id                 String   @id @default(uuid())
+  dealerId           String
+  period             String   // e.g., "2024-Q1", "2024-02"
+  totalOrders        Int      @default(0)
+  totalRevenue       Float    @default(0)
+  averageOrderValue  Float    @default(0)
+  fulfillmentRate    Float    @default(0) // %
+  paymentScore       Int      @default(0) 
+  updatedAt          DateTime @updatedAt
+  
+  dealer             Dealer   @relation(fields: [dealerId], references: [id])
+  
+  @@unique([dealerId, period])
+}
+
+model DealerReview {
+  id              String   @id @default(uuid())
+  dealerId        String
+  customerId      String
+  orderId         String
+  rating          Int      // 1-5
+  review          String?
+  
+  // Aspects (JSON for flexibility)
+  aspects         Json?    // { productQuality: 5, ... }
+  wouldRecommend  Boolean  @default(true)
+  
+  dealerResponse  String?
+  respondedAt     DateTime?
+  
+  createdAt       DateTime @default(now())
+  
+  dealer          Dealer   @relation(fields: [dealerId], references: [id])
+}
+
+model Territory {
+  id          String        @id @default(uuid())
+  name        String
+  type        TerritoryType
+  coverage    Json          // { states: [], cities: [], pincodes: [] }
+  createdAt   DateTime      @default(now())
+  
+  assignments DealerTerritoryAssignment[]
+}
+
+model DealerTerritoryAssignment {
+  id          String   @id @default(uuid())
+  dealerId    String
+  territoryId String
+  isExclusive Boolean  @default(false)
+  priority    Int      @default(1)
+  assignedAt  DateTime @default(now())
+  
+  dealer      Dealer   @relation(fields: [dealerId], references: [id])
+  territory   Territory @relation(fields: [territoryId], references: [id])
+}
+
+model DealerPricingRule {
+  id                String   @id @default(uuid())
+  dealerId          String
+  categoryId        String?  // If null, applies to all
+  productId         String?  // If set, applies to specific product
+  discountPercentage Float
+  customPrice       Float?
+  effectiveFrom     DateTime
+  effectiveTo       DateTime?
+  createdAt         DateTime @default(now())
+  
+  dealer            Dealer   @relation(fields: [dealerId], references: [id])
+}

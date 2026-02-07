@@ -1,0 +1,16 @@
+{
+    "name": "@modern-colours/utils",
+    "version": "1.0.0",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsc -w"
+    },
+    "dependencies": {
+        "date-fns": "^3.3.1"
+    },
+    "devDependencies": {
+        "typescript": "^5.3.3"
+    }
+}

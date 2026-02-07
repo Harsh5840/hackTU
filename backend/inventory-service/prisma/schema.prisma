@@ -1,0 +1,280 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum WarehouseType {
+  MANUFACTURING
+  WAREHOUSE
+  DISTRIBUTION_CENTER
+}
+
+enum FinishType {
+  MATTE
+  GLOSSY
+  SEMI_GLOSSY
+  METALLIC
+}
+
+enum InventoryStatus {
+  AVAILABLE
+  DAMAGED
+  EXPIRED
+  QUARANTINE
+}
+
+enum TransactionType {
+  PURCHASE
+  SALE
+  TRANSFER
+  ADJUSTMENT
+  RETURN
+  DAMAGE
+  RESERVED
+  RELEASED
+}
+
+enum AlertType {
+  LOW_STOCK
+  OVERSTOCK
+  EXPIRED
+  ORDER_DELAYED
+  EXPIRING_SOON
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum AlertStatus {
+  ACTIVE
+  ACKNOWLEDGED
+  RESOLVED
+  DISMISSED
+}
+
+enum TransferStatus {
+  PENDING
+  IN_TRANSIT
+  COMPLETED
+  CANCELLED
+}
+
+// Models
+model Warehouse {
+  id                String          @id @default(uuid())
+  name              String
+  code              String          @unique
+  type              WarehouseType   @default(WAREHOUSE)
+  managerId         String?         // FK to User Service (loose coupling)
+  
+  addressLine1      String?
+  city              String?
+  state             String?
+  pincode           String?
+  
+  latitude          Float?
+  longitude         Float?
+  
+  totalCapacity     Float           @default(0)
+  currentUtilization Float          @default(0)
+  isActive          Boolean         @default(true)
+  operationalHours  Json?           
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  inventory         Inventory[]
+  sourceTransfers   StockTransfer[] @relation("SourceWarehouse")
+  destTransfers     StockTransfer[] @relation("DestWarehouse")
+  forecasts         DemandForecast[]
+  inventoryTransactions InventoryTransaction[]
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  parentId    Int?
+  displayOrder Int      @default(0)
+  isActive    Boolean   @default(true)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  products    Product[]
+}
+
+model Product {
+  id              String    @id @default(uuid())
+  sku             String    @unique
+  name            String
+  description     String?
+  categoryId      Int
+  
+  brand           String    @default("Modern Colours")
+  colorCode       String?   
+  colorName       String?
+  finishType      FinishType @default(MATTE)
+  
+  containerSize   Float
+  containerType   String    
+  unitOfMeasure   String    
+  
+  basePrice       Decimal   @db.Decimal(10, 2)
+  mrp             Decimal   @db.Decimal(10, 2)
+  
+  reorderLevel    Int       @default(10)
+  reorderQuantity Int       @default(50)
+  leadTimeDays    Int       @default(7)
+  
+  isFastMoving    Boolean   @default(false)
+  isSeasonal      Boolean   @default(false)
+  season          String?
+  
+  isActive        Boolean   @default(true)
+  
+  imageUrls       String[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  category        Category  @relation(fields: [categoryId], references: [id])
+  inventory       Inventory[]
+  transactions    InventoryTransaction[]
+  forecasts       DemandForecast[]
+  stockTransfers  StockTransfer[]
+}
+
+model Inventory {
+  id                String           @id @default(uuid())
+  productId         String
+  warehouseId       String
+  
+  quantity          Int              @default(0)
+  reservedQuantity  Int              @default(0)
+  
+  batchNumber       String?
+  manufacturingDate DateTime?
+  expiryDate        DateTime?
+  
+  status            InventoryStatus  @default(AVAILABLE)
+  lastUpdated       DateTime         @updatedAt
+
+  product           Product          @relation(fields: [productId], references: [id])
+  warehouse         Warehouse        @relation(fields: [warehouseId], references: [id])
+
+  @@unique([productId, warehouseId, batchNumber])
+  @@index([expiryDate])
+}
+
+model InventoryTransaction {
+  id                String          @id @default(uuid())
+  transactionTime   DateTime        @default(now())
+  
+  productId         String
+  warehouseId       String?
+  
+  transactionType   TransactionType
+  
+  quantityBefore    Int
+  quantityChange    Int
+  quantityAfter     Int
+  
+  referenceType     String?          
+  referenceId       String?         
+  
+  notes             String?
+  performedById     String?
+
+  product           Product         @relation(fields: [productId], references: [id])
+  warehouse         Warehouse?      @relation(fields: [warehouseId], references: [id])
+  
+  @@index([transactionTime])
+}
+
+model StockTransfer {
+  id                  String          @id @default(uuid())
+  transferNumber      String          @unique @default(cuid())
+  
+  productId           String
+  fromWarehouseId     String
+  toWarehouseId       String
+  
+  quantity            Int
+  status              TransferStatus  @default(PENDING)
+  
+  reason              String?
+  estimatedDeliveryDate DateTime?
+  actualDeliveryDate    DateTime?
+  
+  initiatedById       String
+  confirmedById       String?
+  
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  product             Product         @relation(fields: [productId], references: [id])
+  fromWarehouse       Warehouse       @relation("SourceWarehouse", fields: [fromWarehouseId], references: [id])
+  toWarehouse         Warehouse       @relation("DestWarehouse", fields: [toWarehouseId], references: [id])
+}
+
+model DemandForecast {
+  id                String    @id @default(uuid())
+  productId         String
+  warehouseId       String
+  
+  forecastDate      DateTime
+  forecastHorizon   Int       
+  
+  predictedQuantity Float
+  confidenceScore   Float     
+  
+  generatedAt       DateTime  @default(now())
+
+  product           Product   @relation(fields: [productId], references: [id])
+  warehouse         Warehouse @relation(fields: [warehouseId], references: [id])
+}
+
+model Alert {
+  id            String        @id @default(uuid())
+  alertType     AlertType
+  severity      AlertSeverity
+  
+  entityType    String        
+  entityId      String?
+  
+  title         String
+  message       String
+  
+  status        AlertStatus   @default(ACTIVE)
+  
+  createdAt     DateTime      @default(now())
+  acknowledgedAt DateTime?
+  resolvedAt    DateTime?
+}
+
+model ABCAnalysis {
+  id            String    @id @default(uuid())
+  productId     String
+  warehouseId   String?
+  
+  revenue       Decimal   @db.Decimal(15, 2)
+  percentage    Decimal   @db.Decimal(5, 2)
+  cumulativePercentage Decimal @db.Decimal(5, 2)
+  classification String   // A, B, C
+  
+  analyzedAt    DateTime  @default(now())
+  
+  @@index([analyzedAt])
+}
