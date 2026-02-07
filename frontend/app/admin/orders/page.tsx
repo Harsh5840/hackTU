@@ -81,7 +81,7 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('PENDING'); // Updated default value to 'PENDING'
+  const [statusFilter, setStatusFilter] = useState('ALL'); // Show all orders by default
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
@@ -132,7 +132,7 @@ export default function OrdersPage() {
     const matchesSearch =
       order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.dealerId.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = !statusFilter || order.status === statusFilter;
+    const matchesStatus = statusFilter === 'ALL' || !statusFilter || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -171,7 +171,7 @@ export default function OrdersPage() {
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="PENDING">All Status</SelectItem> {/* Updated value prop to 'PENDING' */}
+              <SelectItem value="ALL">All Status</SelectItem>
               {STATUS_OPTIONS.map((status) => (
                 <SelectItem key={status} value={status}>
                   {status}

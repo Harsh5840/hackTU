@@ -7,8 +7,8 @@ export const getDealerProfile = async (dealerId: string) => {
   const cached = await redis.get(cacheKey);
   if (cached) return JSON.parse(cached);
 
-  // 2. Database Fetch
-  const dealer = await prisma.dealer.findUnique({
+  // 2. Database Fetch - Try by ID first, then by userId for demo mode
+  let dealer = await prisma.dealer.findUnique({
     where: { id: dealerId },
     include: {
       parentDealer: true,
@@ -23,6 +23,25 @@ export const getDealerProfile = async (dealerId: string) => {
       }
     }
   });
+  
+  // If not found by ID, try by userId (for demo mode)
+  if (!dealer) {
+    dealer = await prisma.dealer.findUnique({
+      where: { userId: dealerId },
+      include: {
+        parentDealer: true,
+        subDealers: true,
+        documents: true,
+        performance: {
+          orderBy: { updatedAt: 'desc' },
+          take: 1
+        },
+        territoryAssignments: {
+          include: { territory: true }
+        }
+      }
+    });
+  }
 
   if (!dealer) return null;
 

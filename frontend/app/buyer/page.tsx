@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth-context';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Package, MessageCircle, BarChart3 } from 'lucide-react';
+import Link from 'next/link';
 
 export default function BuyerDashboard() {
   const { user } = useAuth();
@@ -50,17 +51,19 @@ export default function BuyerDashboard() {
 
       {/* Quick Actions */}
       <div className="grid md:grid-cols-3 gap-6">
-        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-mc-yellow/20 rounded-lg">
-              <Package className="h-6 w-6 text-mc-purple" />
+        <Link href="/buyer/marketplace">
+          <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-mc-yellow/20 rounded-lg">
+                <Package className="h-6 w-6 text-mc-purple" />
+              </div>
+              <div>
+                <h3 className="font-semibold">Browse Products</h3>
+                <p className="text-sm text-gray-600">View our catalog</p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-semibold">Browse Products</h3>
-              <p className="text-sm text-gray-600">View our catalog</p>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        </Link>
 
         <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer">
           <div className="flex items-center gap-4">

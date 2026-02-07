@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as onboardingController from '../controllers/onboardingController';
 import * as dealerController from '../controllers/dealerController';
-// import { authMiddleware, roleMiddleware } from '../middleware/auth.middleware'; // DISABLED FOR DEMO
+// import { authMiddleware, roleMiddleware } from '../middleware/auth.middleware';
 import { registrationSchema } from '../utils/validators';
 
 const router = Router();
@@ -9,7 +9,7 @@ const router = Router();
 // Onboarding
 router.post('/register', registrationSchema, onboardingController.register);
 
-// Profile (No auth for demo)
+// Profile (No auth for demo) - MUST come before /:id to avoid route conflict
 router.get('/me', dealerController.getMe);
 router.put('/me/profile', dealerController.updateMe);
 router.get('/hierarchy', dealerController.getHierarchy);

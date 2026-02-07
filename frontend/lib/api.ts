@@ -19,30 +19,10 @@ class ApiClient {
       },
     });
 
-    // Request interceptor to add auth token (DISABLED FOR DEMO)
-    this.client.interceptors.request.use(
-      (config) => {
-        // DEMO MODE: Skip adding auth token
-        // const token = localStorage.getItem('authToken');
-        // if (token) {
-        //   config.headers.Authorization = `Bearer ${token}`;
-        // }
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
-
-    // Response interceptor for error handling (DISABLED FOR DEMO)
+    // Response interceptor for error handling only
     this.client.interceptors.response.use(
       (response) => response,
       (error: AxiosError<ApiError>) => {
-        // DEMO MODE: Skip 401 redirect
-        // if (error.response?.status === 401) {
-        //   // Token expired or invalid
-        //   localStorage.removeItem('authToken');
-        //   localStorage.removeItem('user');
-        //   window.location.href = '/login';
-        // }
         return Promise.reject(error);
       }
     );
@@ -148,6 +128,11 @@ class ApiClient {
 
   async getWarehouses() {
     const response = await this.client.get('/api/inventory/warehouses');
+    return response.data;
+  }
+
+  async getInventory() {
+    const response = await this.client.get('/api/inventory');
     return response.data;
   }
 

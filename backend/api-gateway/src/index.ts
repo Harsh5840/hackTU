@@ -36,9 +36,8 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', timestamp: new Date() });
 });
 
-// Authentication Middleware (Global for API routes) - DISABLED FOR DEMO
+// Authentication Middleware - DISABLED for demo
 // app.use('/api', (req, res, next) => {
-//   // console.log(`[AuthWrapper] url=${req.url}`);
 //   if (req.url.startsWith('/auth')) {
 //     return next();
 //   }

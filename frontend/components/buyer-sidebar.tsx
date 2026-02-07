@@ -16,8 +16,8 @@ import { useState } from 'react';
 
 const menuItems = [
   { icon: Home, label: 'Dashboard', href: '/buyer' },
-  { icon: Package, label: 'Products', href: '/buyer/products' },
-  { icon: ShoppingCart, label: 'My Orders', href: '/buyer/orders' },
+  { icon: ShoppingCart, label: 'Marketplace', href: '/buyer/marketplace' },
+  { icon: Package, label: 'My Orders', href: '/buyer/orders' },
   { icon: MessageCircle, label: 'Telegram Bot', href: 'https://t.me/ModernColoursBot', external: true },
   { icon: User, label: 'Profile', href: '/buyer/profile' },
 ];

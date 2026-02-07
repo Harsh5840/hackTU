@@ -120,8 +120,8 @@ export default function AdminDashboard() {
         }
 
         if (dealersRes.success) {
-          // Count active dealers
-          setDealerCount(dealersRes.data.filter((d: any) => d.isActive !== false).length);
+          // Count active dealers (accountStatus = ACTIVE or null/undefined)
+          setDealerCount(dealersRes.data.filter((d: any) => !d.accountStatus || d.accountStatus === 'ACTIVE').length);
         }
       } catch (error) {
         toast.error('Failed to load dashboard data');
@@ -146,10 +146,12 @@ export default function AdminDashboard() {
 
     return last7Days.map((date) => {
       const dayOrders = orders.filter((order) => {
+        if (!order.createdAt) return false;
         const orderDate = new Date(order.createdAt);
         return orderDate.toDateString() === date.toDateString();
       });
       const revenue = dayOrders.reduce((sum, order) => {
+        if (!order.finalAmount) return sum;
         const amount = typeof order.finalAmount === 'string' ? parseFloat(order.finalAmount) : order.finalAmount;
         return sum + (isNaN(amount) ? 0 : amount);
       }, 0);
@@ -167,11 +169,12 @@ export default function AdminDashboard() {
     orders.forEach((order) => {
       if (order.items && Array.isArray(order.items)) {
         order.items.forEach((item) => {
+          if (!item.productId || !item.quantity) return;
           const product = products.find((p) => p.id === item.productId);
           if (product) {
             if (!productCounts[product.id]) {
               productCounts[product.id] = {
-                name: product.name.substring(0, 15),
+                name: product.name ? product.name.substring(0, 15) : 'Unknown',
                 sales: 0,
               };
             }
@@ -196,9 +199,11 @@ export default function AdminDashboard() {
     };
 
     orders.forEach((order) => {
-      const status = order.status.toUpperCase();
-      if (status in counts) {
-        counts[status]++;
+      if (order.status) {
+        const status = order.status.toUpperCase();
+        if (status in counts) {
+          counts[status]++;
+        }
       }
     });
 
@@ -206,10 +211,12 @@ export default function AdminDashboard() {
   }, [orders]);
 
   // Warehouse utilization
-  const warehouseData = warehouses.map((w) => ({
-    name: w.code,
-    utilization: w.currentUtilization,
-  }));
+  const warehouseData = warehouses
+    .filter((w) => w.code && typeof w.currentUtilization === 'number')
+    .map((w) => ({
+      name: w.code,
+      utilization: w.currentUtilization,
+    }));
 
   const COLORS = ['#3B82F6', '#6366F1', '#10B981', '#F59E0B', '#EF4444'];
 
@@ -296,41 +303,24 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Warehouse Utilization and Orders Status */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Warehouse Utilization */}
-        <Card className="p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Warehouse Utilization</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={warehouseData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis domain={[0, 100]} />
-              <Tooltip formatter={(value) => `${value}%`} />
-              <Bar dataKey="utilization" fill="#10B981" />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
-
-        {/* Order Status Distribution */}
-        <Card className="p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Order Status Distribution</h2>
-          <div className="space-y-3">
-            {['PENDING', 'APPROVED', 'SHIPPED', 'DELIVERED'].map((status, i) => {
-              const count = orderStatusCounts[status] || 0;
-              return (
-                <div key={status} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full`} style={{ backgroundColor: COLORS[i] }} />
-                    <span className="text-sm text-gray-600">{status}</span>
-                  </div>
-                  <span className="font-semibold text-gray-900">{count}</span>
+      {/* Order Status Distribution */}
+      <Card className="p-6">
+        <h2 className="text-lg font-bold text-gray-900 mb-4">Order Status Distribution</h2>
+        <div className="space-y-3">
+          {['PENDING', 'APPROVED', 'SHIPPED', 'DELIVERED'].map((status, i) => {
+            const count = orderStatusCounts[status] || 0;
+            return (
+              <div key={status} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full`} style={{ backgroundColor: COLORS[i] }} />
+                  <span className="text-sm text-gray-600">{status}</span>
                 </div>
-              );
-            })}
-          </div>
-        </Card>
-      </div>
+                <span className="font-semibold text-gray-900">{count}</span>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
 
       {/* Recent Orders */}
       <Card className="p-6">
@@ -348,12 +338,15 @@ export default function AdminDashboard() {
             <tbody>
               {orders.slice(0, 5).map((order) => (
                 <tr key={order.id} className="border-b hover:bg-gray-50">
-                  <td className="py-3 px-4 text-sm text-gray-900">{order.orderNumber}</td>
+                  <td className="py-3 px-4 text-sm text-gray-900">{order.orderNumber || 'N/A'}</td>
                   <td className="py-3 px-4 text-sm text-gray-600">
-                    {new Date(order.createdAt).toLocaleDateString()}
+                    {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}
                   </td>
                   <td className="py-3 px-4 text-sm font-semibold text-gray-900">
-                    ₹{formatPrice(typeof order.finalAmount === 'string' ? parseFloat(order.finalAmount) : order.finalAmount)}
+                    {order.finalAmount 
+                      ? `₹${formatPrice(typeof order.finalAmount === 'string' ? parseFloat(order.finalAmount) : order.finalAmount)}`
+                      : '₹0'
+                    }
                   </td>
                   <td className="py-3 px-4 text-sm">
                     <span
@@ -367,7 +360,7 @@ export default function AdminDashboard() {
                               : 'bg-yellow-100 text-yellow-800'
                       }`}
                     >
-                      {order.status}
+                      {order.status || 'PENDING'}
                     </span>
                   </td>
                 </tr>

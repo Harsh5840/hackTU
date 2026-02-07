@@ -3,7 +3,7 @@ import * as dealerService from '../services/dealerService';
 import { logger } from '../utils/logger';
 
 export const getMe = async (req: Request, res: Response) => {
-  const dealerId = (req as any).user.dealerId; // From Auth Middleware
+  const dealerId = (req as any).user?.dealerId || 'demo-dealer-id'; // From Auth Middleware or demo
   try {
     const dealer = await dealerService.getDealerProfile(dealerId);
     if (!dealer) return res.status(404).json({ success: false, message: 'Dealer not found' });
@@ -15,7 +15,7 @@ export const getMe = async (req: Request, res: Response) => {
 };
 
 export const updateMe = async (req: Request, res: Response) => {
-  const dealerId = (req as any).user.dealerId;
+  const dealerId = (req as any).user?.dealerId || 'demo-dealer-id';
   try {
     const updated = await dealerService.updateProfile(dealerId, req.body);
     res.json({ success: true, data: updated });
@@ -26,7 +26,7 @@ export const updateMe = async (req: Request, res: Response) => {
 };
 
 export const getHierarchy = async (req: Request, res: Response) => {
-  const dealerId = (req as any).user.dealerId;
+  const dealerId = (req as any).user?.dealerId || 'demo-dealer-id';
   try {
     const hierarchy = await dealerService.getHierarchy(dealerId);
     res.json({ success: true, data: hierarchy });

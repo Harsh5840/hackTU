@@ -4,7 +4,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import {
-  LayoutDashboard,
   Package,
   ShoppingCart,
   History,
@@ -15,11 +14,10 @@ import {
 import { useState } from 'react';
 
 const menuItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/dealer' },
+  { icon: User, label: 'Profile', href: '/dealer' },
   { icon: Package, label: 'Catalog', href: '/dealer/catalog' },
   { icon: ShoppingCart, label: 'Cart', href: '/dealer/cart' },
   { icon: History, label: 'Orders', href: '/dealer/orders' },
-  { icon: User, label: 'Profile', href: '/dealer/profile' },
 ];
 
 export function DealerSidebar() {
@@ -38,7 +36,7 @@ export function DealerSidebar() {
       {/* Mobile Toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden p-2 rounded-md bg-indigo-600 text-white"
+        className="fixed top-4 left-4 z-50 md:hidden p-2 rounded-md bg-mc-purple text-white"
       >
         <Menu size={20} />
       </button>
@@ -69,7 +67,7 @@ export function DealerSidebar() {
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   isActive
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-mc-purple text-white'
                     : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                 }`}
               >

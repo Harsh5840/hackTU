@@ -50,19 +50,22 @@ export default function RegisterPage() {
           case 'SUPER_ADMIN':
           case 'COMPANY_ADMIN':
           case 'ADMIN':
-            router.push('/admin');
+            router.replace('/admin');
             break;
           case 'DEALER':
-            router.push('/dealer');
+            router.replace('/dealer');
+            break;
+          case 'WAREHOUSE_MANAGER':
+            router.replace('/admin/warehouse');
             break;
           case 'BUYER':
-            router.push('/buyer');
+            router.replace('/buyer');
             break;
           default:
-            router.push('/');
+            router.replace('/');
         }
       } else {
-        router.push('/');
+        router.replace('/');
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Registration failed');

@@ -27,6 +27,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isDealer: boolean;
   isBuyer: boolean;
+  isWarehouseManager: boolean;
   isLoading: boolean;
 }
 
@@ -58,44 +59,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    // DEMO MODE: Bypass authentication - create fake user based on email
-    console.log('[DEMO MODE] Bypassing authentication for:', email);
-    
-    let role: User['role'] = 'BUYER';
-    let firstName = 'Demo';
-    let lastName = 'User';
-    
-    if (email.includes('admin')) {
-      role = 'SUPER_ADMIN';
-      firstName = 'Admin';
-      lastName = 'User';
-    } else if (email.includes('dealer')) {
-      role = 'DEALER';
-      firstName = 'Dealer';
-      lastName = 'User';
-    } else {
-      role = 'BUYER';
-      firstName = 'Buyer';
-      lastName = 'User';
+    try {
+      // Simple login without JWT - determine role from email pattern
+      let role: User['role'] = 'BUYER';
+      let firstName = 'User';
+      let lastName = 'Name';
+      
+      if (email.includes('admin')) {
+        role = 'ADMIN';
+        firstName = 'Admin';
+        lastName = 'User';
+      } else if (email.includes('warehouse')) {
+        role = 'WAREHOUSE_MANAGER';
+        firstName = 'Warehouse';
+        lastName = 'Manager';
+      } else if (email.includes('dealer')) {
+        role = 'DEALER';
+        firstName = 'Dealer';
+        lastName = 'User';
+      } else {
+        role = 'BUYER';
+        firstName = 'Buyer';
+        lastName = 'User';
+      }
+      
+      const newUser: User = {
+        id: Math.random().toString(36).substring(7),
+        email,
+        firstName,
+        lastName,
+        role
+      };
+      
+      setToken('demo-token');
+      setUser(newUser);
+      localStorage.setItem('authToken', 'demo-token');
+      localStorage.setItem('user', JSON.stringify(newUser));
+      return newUser;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
-    
-    const fakeUser: User = {
-      id: `demo-${role.toLowerCase()}`,
-      email: email,
-      firstName: firstName,
-      lastName: lastName,
-      role: role,
-    };
-    
-    const fakeToken = 'demo-token-' + Date.now();
-    
-    setToken(fakeToken);
-    setUser(fakeUser);
-    localStorage.setItem('authToken', fakeToken);
-    localStorage.setItem('user', JSON.stringify(fakeUser));
-    
-    console.log('[DEMO MODE] Logged in as:', fakeUser);
-    return fakeUser;
   };
 
   const register = async (data: {
@@ -105,26 +109,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     lastName: string;
     role?: 'SUPER_ADMIN' | 'COMPANY_ADMIN' | 'WAREHOUSE_MANAGER' | 'DEALER' | 'BUYER' | 'ADMIN';
   }) => {
-    // DEMO MODE: Bypass registration - create fake user
-    console.log('[DEMO MODE] Bypassing registration for:', data.email);
-    
-    const fakeUser: User = {
-      id: `demo-${data.role?.toLowerCase() || 'user'}`,
+    // Simple registration without backend call
+    const newUser: User = {
+      id: Math.random().toString(36).substring(7),
       email: data.email,
       firstName: data.firstName,
       lastName: data.lastName,
-      role: data.role || 'BUYER',
+      role: data.role || 'BUYER'
     };
     
-    const fakeToken = 'demo-token-' + Date.now();
-    
-    setToken(fakeToken);
-    setUser(fakeUser);
-    localStorage.setItem('authToken', fakeToken);
-    localStorage.setItem('user', JSON.stringify(fakeUser));
-    
-    console.log('[DEMO MODE] Registered as:', fakeUser);
-    return fakeUser;
+    setToken('demo-token');
+    setUser(newUser);
+    localStorage.setItem('authToken', 'demo-token');
+    localStorage.setItem('user', JSON.stringify(newUser));
+    return newUser;
   };
 
   const logout = () => {
@@ -144,6 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAdmin: user?.role === 'SUPER_ADMIN' || user?.role === 'COMPANY_ADMIN' || user?.role === 'ADMIN',
     isDealer: user?.role === 'DEALER',
     isBuyer: user?.role === 'BUYER',
+    isWarehouseManager: user?.role === 'WAREHOUSE_MANAGER',
     isLoading,
   };
 
