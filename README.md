@@ -1,6 +1,6 @@
 # Modern Colours Supply Chain Platform
 
-Enterprise-grade Supply Chain Optimization Platform (Monorepo).
+Enterprise-grade Supply Chain Optimization Platform (Microservice).
 
 ## Structure
 - **frontend/**: React applications (Admin, Dealer, Buyer)
