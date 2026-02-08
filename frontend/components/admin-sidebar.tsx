@@ -9,7 +9,6 @@ import {
   ShoppingCart,
   Users,
   BarChart3,
-  Warehouse,
   LogOut,
   Menu,
 } from 'lucide-react';
@@ -20,7 +19,6 @@ const menuItems = [
   { icon: Package, label: 'Products', href: '/admin/products' },
   { icon: ShoppingCart, label: 'Orders', href: '/admin/orders' },
   { icon: Users, label: 'Dealers', href: '/admin/dealers' },
-  { icon: Warehouse, label: 'Warehouses', href: '/admin/warehouses' },
   { icon: BarChart3, label: 'Analytics', href: '/admin/analytics' },
 ];
 
