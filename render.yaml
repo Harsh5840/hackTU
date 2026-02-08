@@ -1,56 +1,35 @@
 # Render.yaml for deploying the Modern Colours Supply Chain application
-
-# This configuration sets up the necessary databases, Redis, and all microservices.
-# The API Gateway is exposed as the main web service, while other services are private.
-# Environment variables are used to connect services to each other and to the databases.
+# This configuration deploys all backend microservices to Render.
+# Frontend is deployed to Vercel.
 #
-# Please make sure to create the following before deploying:
-# 1. A PostgreSQL database on Render.
-# 2. A Redis instance on Render.
-# 3. A RabbitMQ instance from a cloud provider (e.g., CloudAMQP).
-#
-# You will need to create a secret group in Render called `mc-secrets` with the following keys:
-# - DATABASE_URL (from your Render PostgreSQL)
-# - REDIS_URL (from your Render Redis)
-# - RABBITMQ_URL (from your cloud RabbitMQ provider)
-# - JWT_SECRET (a secure, random string)
+# Required secret group in Render: `mc-secrets`
+# Keys needed:
+# - JWT_SECRET
+# - RABBITMQ_URL
 # - TELEGRAM_BOT_TOKEN
 # - TELEGRAM_ADMIN_IDS
-# - SMTP_HOST
-# - SMTP_PORT
-# - SMTP_USER
-# - SMTP_PASS
+# - SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
 # - ADMIN_EMAIL
-# - AWS_REGION
-# - AWS_S3_BUCKET
+# - AWS_REGION, AWS_S3_BUCKET
+
+databases:
+  - name: postgres
+    plan: free
+    databaseName: supply_chain_db
+    user: admin
+
+redis:
+  - name: redis
+    plan: free
 
 services:
-  # ------------------ Databases & Caching ------------------
-  - name: postgres
-    type: pserv
-    plan: free
-    envVars:
-      - key: POSTGRES_USER
-        value: admin
-      - key: POSTGRES_PASSWORD
-        value: password
-      - key: POSTGRES_DB
-        value: supply_chain_db
-    disk:
-      name: postgres_data
-      mountPath: /var/lib/postgresql/data
-      sizeGB: 1
-
-  - name: redis
-    type: pserv
-    plan: free
 
   # ------------------ Microservices ------------------
 
   - name: api-gateway
     type: web
     plan: free
-    env: docker
+    runtime: docker
     dockerfilePath: ./backend/api-gateway/Dockerfile
     dockerContext: ./backend/api-gateway
     envVars:
@@ -68,28 +47,21 @@ services:
       - key: ANALYTICS_SERVICE_URL
         value: http://analytics-service:8000
     healthCheckPath: /
-    routes:
-      - destination: /
-        source: /
 
   - name: auth-service
     type: pserv
     plan: free
-    env: docker
+    runtime: docker
     dockerfilePath: ./backend/auth-service/Dockerfile
     dockerContext: ./backend/auth-service
     envVars:
       - fromGroup: mc-secrets
       - key: PORT
         value: 3001
-      - key: DATABASE_URL
-        fromService:
-          type: pserv
+      - fromDatabase:
           name: postgres
           property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: pserv
+      - fromRedis:
           name: redis
           property: connectionString
 
@@ -97,74 +69,62 @@ services:
   - name: inventory-service
     type: pserv
     plan: free
-    env: docker
+    runtime: docker
     dockerfilePath: ./backend/inventory-service/Dockerfile
     dockerContext: ./backend/inventory-service
     envVars:
       - fromGroup: mc-secrets
       - key: PORT
         value: 3002
-      - key: DATABASE_URL
-        fromService:
-          type: pserv
+      - fromDatabase:
           name: postgres
           property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: pserv
+      - fromRedis:
           name: redis
           property: connectionString
 
   - name: order-service
     type: pserv
     plan: free
-    env: docker
+    runtime: docker
     dockerfilePath: ./backend/order-service/Dockerfile
     dockerContext: ./backend/order-service
     envVars:
       - fromGroup: mc-secrets
       - key: PORT
         value: 3003
-      - key: DATABASE_URL
-        fromService:
-          type: pserv
+      - fromDatabase:
           name: postgres
           property: connectionString
 
   - name: dealer-service
     type: pserv
     plan: free
-    env: docker
+    runtime: docker
     dockerfilePath: ./backend/dealer-service/Dockerfile
     dockerContext: ./backend/dealer-service
     envVars:
       - fromGroup: mc-secrets
       - key: PORT
         value: 3004
-      - key: DATABASE_URL
-        fromService:
-          type: pserv
+      - fromDatabase:
           name: postgres
           property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: pserv
+      - fromRedis:
           name: redis
           property: connectionString
 
   - name: notification-service
     type: pserv
     plan: free
-    env: docker
+    runtime: docker
     dockerfilePath: ./backend/notification-service/Dockerfile
     dockerContext: ./backend/notification-service
     envVars:
       - fromGroup: mc-secrets
       - key: PORT
         value: 3005
-      - key: DATABASE_URL
-        fromService:
-          type: pserv
+      - fromDatabase:
           name: postgres
           property: connectionString
       - key: API_GATEWAY_URL
@@ -176,16 +136,14 @@ services:
   - name: analytics-service
     type: pserv
     plan: free
-    env: docker
+    runtime: docker
     dockerfilePath: ./backend/analytics-service/Dockerfile
     dockerContext: ./backend/analytics-service
     envVars:
       - fromGroup: mc-secrets
       - key: PORT
         value: 8000
-      - key: DB_URI
-        fromService:
-          type: pserv
+      - fromDatabase:
           name: postgres
           property: connectionString
       - key: PROJECT_NAME
