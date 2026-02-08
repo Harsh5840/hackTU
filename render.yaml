@@ -69,9 +69,8 @@ services:
         value: http://analytics-service:8000
     healthCheckPath: /
     routes:
-      - type: http
-        path: /
-        port: 3000
+      - destination: /
+        source: /
 
   - name: auth-service
     type: pserv
@@ -192,23 +191,3 @@ services:
       - key: PROJECT_NAME
         value: "Modern Colours Analytics"
 
-  # ------------------ Frontend ------------------
-  - name: frontend
-    type: web
-    plan: free
-    env: node
-    buildFilter:
-      paths:
-      - frontend/**
-    buildCommand: "pnpm install && pnpm build"
-    startCommand: "pnpm start"
-    envVars:
-      - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: api-gateway
-          property: url
-    routes:
-      - type: http
-        path: /
-        port: 3000
