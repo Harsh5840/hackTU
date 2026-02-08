@@ -2,6 +2,7 @@ import prisma from '../config/database';
 import { calculateOrderTotals } from '../utils/orderCalculations';
 import { publishEvent } from '../events/publisher';
 import { logger } from '../utils/logger';
+import { OrderStatus } from '@prisma/client';
 
 export const createOrder = async (data: any) => {
   const { dealerId, items, deliveryAddress } = data;
@@ -48,16 +49,38 @@ export const getOrderById = async (id: string) => {
   });
 };
 
-export const getAllOrders = async (filters?: { dealerId?: string; status?: string; limit?: number }) => {
+export const getAllOrders = async (filters?: { dealerId?: string; status?: OrderStatus; limit?: number }) => {
   const { dealerId, status, limit = 50 } = filters || {};
   
   return prisma.order.findMany({
     where: {
       ...(dealerId && { dealerId }),
-      ...(status && { status })
+      ...(status && { orderStatus: status })
     },
     include: { items: true },
     orderBy: { createdAt: 'desc' },
     take: limit
   });
+};
+
+export const updateOrderStatus = async (id: string, status: OrderStatus) => {
+  const order = await prisma.order.update({
+    where: { id },
+    data: { 
+      orderStatus: status,
+      updatedAt: new Date()
+    },
+    include: { items: true }
+  });
+
+  // Publish status change event
+  publishEvent('order.status.updated', { 
+    orderId: order.id, 
+    orderNumber: order.orderNumber,
+    status,
+    previousStatus: order.orderStatus
+  });
+
+  logger.info(`Order ${order.orderNumber} status updated to ${status}`);
+  return order;
 };

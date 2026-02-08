@@ -17,4 +17,6 @@ router.post(
 
 router.get('/:id', orderController.getOrder);
 
+router.patch('/:id', orderController.updateOrder);
+
 export default router;

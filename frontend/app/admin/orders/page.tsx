@@ -18,6 +18,8 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Eye, Download } from 'lucide-react';
 
+import { OrderStatus } from '@/types';
+
 interface OrderItem {
   id: string;
   productId: string;
@@ -56,9 +58,9 @@ interface Order {
   updatedAt: string;
 }
 
-const STATUS_OPTIONS = [
+const STATUS_OPTIONS: OrderStatus[] = [
   'PENDING',
-  'APPROVED',
+  'CONFIRMED',
   'PROCESSING',
   'SHIPPED',
   'DELIVERED',
@@ -104,19 +106,19 @@ export default function OrdersPage() {
     }
   };
 
-  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+  const handleStatusUpdate = async (orderId: string, newStatus: OrderStatus) => {
     setUpdatingOrderId(orderId);
     try {
       const response = await api.updateOrderStatus(orderId, newStatus);
       if (response.success) {
         setOrders(
           orders.map((o) =>
-            o.id === orderId ? { ...o, status: newStatus } : o
+            o.id === orderId ? { ...o, orderStatus: newStatus } : o
           )
         );
         toast.success('Order status updated');
         if (selectedOrder?.id === orderId) {
-          setSelectedOrder({ ...selectedOrder, status: newStatus });
+          setSelectedOrder({ ...selectedOrder, orderStatus: newStatus });
         }
       }
     } catch (error) {
@@ -131,7 +133,7 @@ export default function OrdersPage() {
     const matchesSearch =
       order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.dealerId.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'ALL' || !statusFilter || order.status === statusFilter;
+    const matchesStatus = statusFilter === 'ALL' || !statusFilter || (order.orderStatus || order.status) === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -236,7 +238,7 @@ export default function OrdersPage() {
                       <Select
                         value={order.orderStatus || order.status || 'PENDING'}
                         onValueChange={(value) =>
-                          handleStatusUpdate(order.id, value)
+                          handleStatusUpdate(order.id, value as OrderStatus)
                         }
                         disabled={updatingOrderId === order.id}
                       >
